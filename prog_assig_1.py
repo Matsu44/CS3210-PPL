@@ -27,6 +27,7 @@ class CharClass(IntEnum):
     OTHER      = 8
     EQUALITY   = 9
     WORD       = 10
+    PERIOD     = 11
 
 # all tokens
 class Token(IntEnum):
@@ -223,8 +224,6 @@ def getChar(input):
         return (c, CharClass.DELIMITER)
     if c in ['=', '!=', '<', '<=', '>', '>=']:  #?
         return (c, CharClass.EQUALITY)
-#   if c in ['main','if', 'else', 'while', 'int', 'float', 'char', 'bool', 'true', 'false']:
-#       return (c, CharClass.WORD)
     return (c, CharClass.OTHER)
 
 # calls getChar and addChar until it returns a non-blank
@@ -260,25 +259,26 @@ def lex(input):
         input, lexeme = addChar(input, lexeme)
         while True:
             c, charClass = getChar(input)
-            input, lexeme = addChar(input, lexeme)
-        if lexeme in ['main','if', 'else', 'while', 'int', 'float', 'char', 'bool', 'true', 'false']:
-            return(input, lexeme, lookupWord[lexeme])
-        else:
-            return(input, lexeme, Token.IDENTIFIER)
+            if charClass == CharClass.LETTER or charClass == CharClass.DIGIT:
+                input, lexeme = addChar(input, lexeme)
+            else:
+                if lexeme in ['main','if', 'else', 'while', 'int', 'float', 'char', 'bool', 'true', 'false']:
+                    return(input, lexeme, lookupWord[lexeme])
+                else:
+                    return(input, lexeme, Token.IDENTIFIER)
 
     # reads int or float
     if charClass == CharClass.DIGIT:
         input, lexeme = addChar(input, lexeme)
-        c, charClass = getChar(input)
-        if charClass == CharClass.DIGIT or charClass == CharClass.PERIOD:
-            input, lexeme = addChar(input, lexeme)
-            while True:
-                c, charClass = getChar(input)
+        while True:
+            c, charClass = getChar(input)
+            if charClass == CharClass.DIGIT or charClass == CharClass.PERIOD:
                 input, lexeme = addChar(input, lexeme)
-            if "." in lexeme:
-                return(input, lexeme, Token.FLOAT_LITERAL)
             else:
-                return(input, lexeme, Token.INT_LITERAL)
+                if "." in lexeme:
+                    return(input, lexeme, Token.FLOAT_LITERAL)
+                else:
+                    return(input, lexeme, Token.INT_LITERAL)
 
     # reads operator
     if charClass == CharClass.OPERATOR:
