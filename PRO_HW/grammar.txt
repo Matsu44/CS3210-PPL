@@ -42,7 +42,7 @@ W -> F O' W
 F -> id
 F -> id [ E ]
 F -> L
-F -> { E }
+F -> ( E )
 L -> il
 L -> B
 L -> fl

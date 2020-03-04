@@ -28,6 +28,7 @@ class CharClass(IntEnum):
     EQUALITY   = 9
     WORD       = 10
     PERIOD     = 11
+    SINGLE     = 12
 
 # all tokens
 class Token(IntEnum):
@@ -225,6 +226,8 @@ def getChar(input):
         return (c, CharClass.DELIMITER)
     if c in ['=', '!', '<', '>']:  #?
         return (c, CharClass.EQUALITY)
+    if c in ["'"]:
+        return (c, CharClass.SINGLE)
     return (c, CharClass.OTHER)
 
 # calls getChar and addChar until it returns a non-blank
@@ -304,10 +307,20 @@ def lex(input):
         input, lexeme = addChar(input, lexeme)
         while True:
             c, charClass = getChar(input)
-            if charClass == "=":
+            if charClass == CharClass.EQUALITY:
                 input, lexeme = addChar(input, lexeme)
             else:
                 return(input, lexeme, lookupEquality[lexeme])
+       
+    # reads CHAR_LITERAL token
+    if charClass == CharClass.SINGLE:
+        input, lexeme = addChar(input, lexeme)
+        while True:
+            c, charClass = getChar(input)
+            if charClass == CharClass.LETTER or charClass == CharClass.SINGLE:
+                input, lexeme = addChar(input, lexeme)
+            else:
+                return(input, lexeme, Token.CHAR_LITERAL)
 
     # anything else, raises an error
     raise Exception(errorMessage(3))
@@ -415,6 +428,7 @@ def parse(input, grammar, actions, gotos):
         if DEBUG:
             print("action:",                   end = " ")
             print(action)
+            print(token)
 
         # if action is undefined, raise an approriate error
         if action is None:
@@ -534,7 +548,7 @@ if __name__ == "__main__":
     try:
         slrTableFile = None
         try:
-            slrTableFile = open("../grammar_csv_B.csv", "rt")
+            slrTableFile = open("../grammar_csv.csv", "rt")
         except:
             pass
         if not slrTableFile:
