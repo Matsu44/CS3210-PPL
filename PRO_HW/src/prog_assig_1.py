@@ -179,7 +179,8 @@ lookupOperator = {
 }
 
 lookupEquality = {
-    "="          : Token.EQUALITY,
+    "="          : Token.ASSIGNMENT,
+    "=="         : Token.EQUALITY,
     "!="         : Token.INEQUALITY,
     "<"          : Token.LESS,
     "<="         : Token.LESS_EQUAL,
@@ -222,7 +223,7 @@ def getChar(input):
         return (c, CharClass.BLANK)
     if c in ['(', ')', '[', ']', '{', '}']:
         return (c, CharClass.DELIMITER)
-    if c in ['=', '!=', '<', '<=', '>', '>=']:  #?
+    if c in ['=', '!', '<', '>']:  #?
         return (c, CharClass.EQUALITY)
     return (c, CharClass.OTHER)
 
@@ -291,24 +292,22 @@ def lex(input):
         input, lexeme = addChar(input, lexeme)
         if lexeme in lookupDelimiter:
             return (input, lexeme, lookupDelimiter[lexeme])
-        
-    # reads PL words
-#    if charClass == CharClass.WORD:
-#       input, lexeme = addChar(input, lexeme)
-#       if lexeme in lookupWord:
-#           return (input, lexeme, lookupWord[lexeme])
      
         # reads punctuation
     if charClass == CharClass.PUNCTUATOR:
         input, lexeme = addChar(input, lexeme)
-        if lexeme in lookupWord:
+        if lexeme in lookupPunctuator:
             return (input, lexeme, lookupPunctuator[lexeme])
         
     # reads equality symbols
     if charClass == CharClass.EQUALITY:
         input, lexeme = addChar(input, lexeme)
-        if lexeme in lookupEquality:
-            return (input, lexeme, lookupEquality[lexeme])
+        while True:
+            c, charClass = getChar(input)
+            if charClass == "=":
+                input, lexeme = addChar(input, lexeme)
+            else:
+                return(input, lexeme, lookupEquality[lexeme])
 
     # anything else, raises an error
     raise Exception(errorMessage(3))
@@ -535,7 +534,7 @@ if __name__ == "__main__":
     try:
         slrTableFile = None
         try:
-            slrTableFile = open("../slr_table.csv", "rt")
+            slrTableFile = open("../grammar_csv_B.csv", "rt")
         except:
             pass
         if not slrTableFile:
