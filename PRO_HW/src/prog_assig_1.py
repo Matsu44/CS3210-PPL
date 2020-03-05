@@ -127,7 +127,7 @@ def errorMessage(code):
     if code == 16:
         return msg + "identifier expected"
     if code == 17:
-        return msg + "',' expected"
+        return msg + "';' expected"
     if code == 18:
         return msg + "'=' expected"
     if code == 19:
@@ -135,25 +135,37 @@ def errorMessage(code):
     return msg + "syntax error"
 
 # get error code from parse state
-def getErrorCode(state):
-    # EOF expected
-    if state == 6:
-        return 6
-    # identifier expected
-    if state in [1, 5, 24, 28]:
-        return 7
-    # special word missing
-    if state in [0, 2, 4, 9, 13, 37, 45, 46, 50]:
-        return 8
-    # symbol missing
-    if state in [3, 7, 11, 23, 30, 40]:
-        return 9
-    # data type expected
-    if state in [29]:
-        return 10
-    # identifier or literal value expected
-    if state in [25, 26, 27, 33, 55, 56, 57, 58, 59, 60, 61, 62]:
+def getErrorCode(state, token):
+    # int type expected
+    if state == 0:
+        return 12
+    # main expected
+    if state == 1:
         return 11
+    # ( expected
+    if state == 2:
+        return 10
+    # ) expected
+    if state == 3:
+        return 9
+    # { expected
+    if state == 4:
+        return 8
+    # } expected
+    if state == 63 and token == 0:
+        return 7
+    # = expected
+    if state == 5:
+        return 18
+    # ; expected
+    if state == 24:
+        return 17
+    # ( expected
+    if state == 22:
+        return 10
+    # identifier, if, or while expected
+    if state == 63 and token == 10:
+        return 19
     return 99
 
 # lexeme to token conversion map
@@ -284,7 +296,7 @@ def lex(input):
                 else:
                     return(input, lexeme, Token.INT_LITERAL)
 
-    # reads operator
+# reads operator
     if charClass == CharClass.OPERATOR:
         input, lexeme = addChar(input, lexeme)
         if lexeme in lookupOperator:
@@ -428,11 +440,12 @@ def parse(input, grammar, actions, gotos):
         if DEBUG:
             print("action:",                   end = " ")
             print(action)
+            print(state)
             print(token)
 
         # if action is undefined, raise an approriate error
         if action is None:
-            errorCode = getErrorCode(state)
+            errorCode = getErrorCode(state, token)
             raise Exception(errorMessage(errorCode))
 
         # TODO: implement the shift operation
